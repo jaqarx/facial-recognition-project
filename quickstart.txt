@@ -1,0 +1,6 @@
+## create an environment for packages
+conda create --name [insertname]
+conda activate [insertname]
+
+## install opencv package
+pip install opencv-python
