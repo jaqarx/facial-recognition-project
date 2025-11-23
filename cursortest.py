@@ -7,7 +7,25 @@ mode = 0 # if True, draw rectangle. Press 'm' to toggle to curve
 ix,iy = -1,-1 #initial positions
 lastx, lasty = 0, 0 #last x and y positions
 img = np.zeros((512, 512,3), np.uint8)
+settingsImg = np.zeros((200, 450, 3), np.uint8)
+rgb = [0, 0, 0]
 prevImgs = []
+
+def changeR(position):
+    global rgb
+    rgb[2] = position
+
+def changeG(position):
+    global rgb
+    rgb[1] = position
+
+def changeB(position):
+    global rgb
+    rgb[0] = position
+
+def changeM(position):
+    global mode
+    mode = position
 
 #Finds what x and y directions the mouse is moving in, returning an array of directions
 def findDirection(ix, iy, x, y):
@@ -29,7 +47,7 @@ def findDirection(ix, iy, x, y):
 def resetCanvas(img):
     img.fill(0)
     font = cv.FONT_HERSHEY_SIMPLEX
-    cv.putText(img,'m, r, esc, u, s',(10,500), font, 0.8,(255,255,255),2,cv.LINE_AA)
+    cv.putText(img,'r, esc, u, s',(10,500), font, 0.8,(255,255,255),2,cv.LINE_AA)
 
 # mouse callback function
 # Either draws hollow rectangles or circles depending on mode, which is toggled by pressing "m"
@@ -40,17 +58,17 @@ def draw_rect(x, y):
     b = iy + 5 * rectangleDirection[1]
     c = x - 5 * rectangleDirection[0]
     d = y - 5 * rectangleDirection[1]
-    cv.rectangle(img,(ix,iy),(a,y),(0,255,0),-1)
-    cv.rectangle(img,(c,iy),(x,y),(0,255,0),-1)
-    cv.rectangle(img,(ix,d),(x,y),(0,255,0),-1)
-    cv.rectangle(img,(ix,iy),(x,b),(0,255,0),-1)
+    cv.rectangle(img,(ix,iy),(a,y),rgb,-1)
+    cv.rectangle(img,(c,iy),(x,y),rgb,-1)
+    cv.rectangle(img,(ix,d),(x,y),rgb,-1)
+    cv.rectangle(img,(ix,iy),(x,b),rgb,-1)
 
 def draw_line(x, y):
-    cv.line(img,(lastx, lasty),(x, y),(0,0,255),5)
+    cv.line(img,(lastx, lasty),(x, y),rgb,5)
 
 def draw_circle(x, y):
     radius = max(math.sqrt((ix - x) ** 2 + (iy - y) ** 2), 5)
-    cv.circle(img, (ix, iy), int(radius), (255, 0, 0), -1)
+    cv.circle(img, (ix, iy), int(radius), rgb, -1)
 
 def checkSame(newPixels, pixel, originalColor, color):
     global img
@@ -107,39 +125,55 @@ def on_mouse(event, x, y, flags, param):
             img = prevImgs[-1].copy()
             draw_rect(x, y)
         elif mode == 1:
-            cv.line(img,(lastx, lasty),(x, y),(0,0,255),5)
+            draw_line(x, y)
         elif mode == 2:
             radius = max(math.sqrt((ix - x) ** 2 + (iy - y) ** 2), 5)
-            cv.circle(img, (ix, iy), int(radius), (255, 0, 0), -1)
+            cv.circle(img, (ix, iy), int(radius), rgb, -1)
         elif mode == 3:
-            color = [255, 255, 255]
-            draw_fill(x, y, color)
+            draw_fill(x, y, rgb)
         prevImgs.append(img.copy())
 
-
+def draw_settings():
+    settingsImg.fill(0)
+    if mode == 0:
+        cv.rectangle(settingsImg, (125, 10), (325, 190), rgb, 5)
+        cv.rectangle(settingsImg, (130, 15), (320, 185), (0, 0, 0), 5)
+    elif mode == 1:
+        cv.line(settingsImg, (10, 100), (440, 100), rgb, 5)
+    elif mode == 2:
+        cv.circle(settingsImg, (225, 100), 50, rgb, -1)
+    elif mode == 3:
+        settingsImg[:] = rgb
 resetCanvas(img)
 prevImgs.append(img.copy())
 cv.namedWindow('image')
 cv.setMouseCallback('image', on_mouse)
+cv.namedWindow('settings')
+
+cv.createTrackbar('R', 'settings', 255, 255, changeR)
+cv.createTrackbar('G', 'settings', 255, 255, changeG)
+cv.createTrackbar('B', 'settings', 255, 255, changeB)
+cv.createTrackbar('mode', 'settings', 0, 3, changeM)
 #cv.namedWindow('prevImg')
  
-print(img[0, 0])
+print(img[0, 0])    
 while(1):
     cv.imshow('image',img)
     #cv.imshow('prevImg', prevImgs[-1])
     k = cv.waitKey(5) & 0xFF
-    if k == ord('m'): #Press "m" to toggle mode
-        mode += 1
-        mode %= 4
-    elif k == ord('r'): #Press "r" to reset canvas
+    if k == ord('r'): #Press "r" to reset canvas
         resetCanvas(img)
         prevImgs.append(img.copy())
     elif k == ord('u'): #press "u" to undo
-        prevImgs.pop()
-        img = prevImgs[-1].copy()
+        if len(prevImgs) > 1:
+            prevImgs.pop()
+            img = prevImgs[-1].copy()
     elif k == ord("s"):
         cv.imwrite("test/drawing.png", img)
     elif k == 27: #Press esc to escape
         break
+    
+    cv.imshow('settings', settingsImg)
+    draw_settings()
  
 cv.destroyAllWindows()
