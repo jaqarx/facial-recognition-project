@@ -34,33 +34,45 @@ def resetCanvas(img):
 # mouse callback function
 # Either draws hollow rectangles or circles depending on mode, which is toggled by pressing "m"
 # Circles radius changes depending on mouse move speed
-def draw_circle(event, x, y, flags, param):
+def draw_rect(x, y):
+    rectangleDirection = findDirection(ix, iy, x, y)
+    a = ix + 5 * rectangleDirection[0]
+    b = iy + 5 * rectangleDirection[1]
+    c = x - 5 * rectangleDirection[0]
+    d = y - 5 * rectangleDirection[1]
+    cv.rectangle(img,(ix,iy),(a,y),(0,255,0),-1)
+    cv.rectangle(img,(c,iy),(x,y),(0,255,0),-1)
+    cv.rectangle(img,(ix,d),(x,y),(0,255,0),-1)
+    cv.rectangle(img,(ix,iy),(x,b),(0,255,0),-1)
+
+def draw_line(x, y):
+    cv.line(img,(lastx, lasty),(x, y),(0,0,255),5)
+
+def draw_circle(x, y):
+    radius = max(math.sqrt((ix - x) ** 2 + (iy - y) ** 2), 5)
+    cv.circle(img, (ix, iy), int(radius), (255, 0, 0), -1)
+
+def draw_stuff(x, y):
+    global img, prevImgs
+    if mode == 0:
+        img = prevImgs[-1].copy()
+        draw_rect(x, y)
+    elif mode == 1:
+        draw_line(x, y)
+    elif mode == 2:
+        img = prevImgs[-1].copy()
+        draw_circle(x, y)
+
+def on_mouse(event, x, y, flags, param):
     global ix,iy,drawing,mode, lastx, lasty, img, prevImgs
     if event == cv.EVENT_LBUTTONDOWN:
         drawing = True
         ix,iy = x,y
         lastx, lasty = x, y
-    
+
     elif event == cv.EVENT_MOUSEMOVE:
-        rectangleDirection = findDirection(ix, iy, x, y)
         if drawing == True:
-            # Detect changed direction
-            if mode == 0:
-                img = prevImgs[-1].copy()
-                a = ix + 5 * rectangleDirection[0]
-                b = iy + 5 * rectangleDirection[1]
-                c = x - 5 * rectangleDirection[0]
-                d = y - 5 * rectangleDirection[1]
-                cv.rectangle(img,(ix,iy),(a,y),(0,255,0),-1)
-                cv.rectangle(img,(c,iy),(x,y),(0,255,0),-1)
-                cv.rectangle(img,(ix,d),(x,y),(0,255,0),-1)
-                cv.rectangle(img,(ix,iy),(x,b),(0,255,0),-1)
-            elif mode == 1:
-                cv.line(img,(lastx, lasty),(x, y),(0,0,255),5)
-            elif mode == 2:
-                img = prevImgs[-1].copy()
-                radius = max(math.sqrt((ix - x) ** 2 + (iy - y) ** 2), 5)
-                cv.circle(img, (ix, iy), int(radius), (255, 0, 0), -1)
+            draw_stuff(x, y)
         lastx, lasty = x, y
     
     elif event == cv.EVENT_LBUTTONUP:
@@ -68,14 +80,7 @@ def draw_circle(event, x, y, flags, param):
         drawing = False
         if mode == 0:
             img = prevImgs[-1].copy()
-            a = ix + 5 * rectangleDirection[0]
-            b = iy + 5 * rectangleDirection[1]
-            c = x - 5 * rectangleDirection[0]
-            d = y - 5 * rectangleDirection[1]
-            cv.rectangle(img,(ix,iy),(a,y),(0,255,0),-1)
-            cv.rectangle(img,(c,iy),(x,y),(0,255,0),-1)
-            cv.rectangle(img,(ix,d),(x,y),(0,255,0),-1)
-            cv.rectangle(img,(ix,iy),(x,b),(0,255,0),-1)
+            draw_rect(x, y)
         elif mode == 1:
             cv.line(img,(lastx, lasty),(x, y),(0,0,255),5)
         elif mode == 2:
@@ -87,7 +92,7 @@ def draw_circle(event, x, y, flags, param):
 resetCanvas(img)
 prevImgs.append(img.copy())
 cv.namedWindow('image')
-cv.setMouseCallback('image',draw_circle)
+cv.setMouseCallback('image', on_mouse)
 #cv.namedWindow('prevImg')
  
 while(1):
@@ -104,7 +109,7 @@ while(1):
         prevImgs.pop()
         img = prevImgs[-1].copy()
     elif k == ord("s"):
-        cv.imwrite("test/cat1234.png", img)
+        cv.imwrite("test/drawing.png", img)
     elif k == 27: #Press esc to escape
         break
  
