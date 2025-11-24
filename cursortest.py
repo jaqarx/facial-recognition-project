@@ -114,10 +114,10 @@ def on_mouse(event, x, y, flags, param):
     elif event == cv.EVENT_MOUSEMOVE:
         if drawing == True:
             if mode == 0:
+                draw_line(x, y)
+            elif mode == 1:
                 img = prevImgs[-1].copy()
                 draw_rect(x, y)
-            elif mode == 1:
-                draw_line(x, y)
             elif mode == 2:
                 img = prevImgs[-1].copy()
                 draw_circle(x, y)
@@ -126,10 +126,10 @@ def on_mouse(event, x, y, flags, param):
     elif event == cv.EVENT_LBUTTONUP:
         drawing = False
         if mode == 0:
+            draw_line(x, y)
+        elif mode == 1:
             img = prevImgs[-1].copy()
             draw_rect(x, y)
-        elif mode == 1:
-            draw_line(x, y)
         elif mode == 2:
             draw_circle(x, y)
         elif mode == 3:
@@ -139,10 +139,10 @@ def on_mouse(event, x, y, flags, param):
 def draw_settings():
     settingsImg.fill(0)
     if mode == 0:
+        cv.line(settingsImg, (10, 100), (440, 100), rgb, t)
+    elif mode == 1:
         cv.rectangle(settingsImg, (125, 10), (325, 190), rgb, t)
         cv.rectangle(settingsImg, (125 + t, 10 + t), (325 - t, 190 - t), (0, 0, 0), t)
-    elif mode == 1:
-        cv.line(settingsImg, (10, 100), (440, 100), rgb, t)
     elif mode == 2:
         cv.circle(settingsImg, (225, 100), 50, rgb, t)
     elif mode == 3:
