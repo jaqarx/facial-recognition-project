@@ -1,6 +1,7 @@
 ## create an environment for packages
-conda create --name [insertname]
+conda create --name [insertname] python=3.11 (or whatever python ver you want to use)
 conda activate [insertname]
 
 ## install opencv package
 pip install opencv-python
+pip install face-recognition
